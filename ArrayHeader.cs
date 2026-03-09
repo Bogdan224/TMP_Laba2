@@ -1,21 +1,31 @@
 ﻿namespace TMP_Laba2
 {
-    public class ArrayHeader<T>
+    public interface ISerializable<T>
     {
-        public ArrayPage<T>[] Pages { get; set; }
-        
-        public ArrayHeader(long arraySize) 
-        {
-            Pages = new ArrayPage<T>[arraySize];
-        }
+        public byte[] ToBytes();
+        public void FromBytes(byte[] bytes, ref int offset);
     }
 
-    public class StringArrayHeader : ArrayHeader<string>
+    public abstract class ArrayHeader : ISerializable<ArrayHeader>
     {
-        private int _stringSize;
-        public StringArrayHeader(long arraySize, int stringSize) : base(arraySize)
+        public ArrayPage[] Pages { get; set; }
+        
+        //public ArrayHeader(long arraySize, int elementSize)
+        //{
+        //    var tmp = new ArrayPage<T>(elementSize: elementSize, 0);
+        //    var pageCount = arraySize / tmp.TotalElementsCount;
+
+        //    Pages = new ArrayPage<T>[pageCount];
+        //}
+
+        public byte[] ToBytes()
         {
-            _stringSize = stringSize;
+            throw new NotImplementedException();
+        }
+
+        public void FromBytes(byte[] bytes, ref int offset)
+        {
+            throw new NotImplementedException();
         }
     }
 }

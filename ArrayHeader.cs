@@ -6,7 +6,14 @@
         public void FromBytes(byte[] bytes, ref int offset);
     }
 
-    public abstract class IntArrayHeader : ISerializable<IntArrayHeader>
+    public interface IArrayHeader;
+
+    public enum ArrayType
+    {
+        Int, Char, String
+    }
+
+    public abstract class IntArrayHeader : ISerializable<IntArrayHeader>, IArrayHeader
     {
         public IntArrayPage[] Pages { get; set; }
 
@@ -29,7 +36,7 @@
         }
     }
 
-    public abstract class CharArrayHeader : ISerializable<CharArrayHeader>
+    public abstract class CharArrayHeader : ISerializable<CharArrayHeader>, IArrayHeader
     {
         public CharArrayPage[] Pages { get; set; }
 
@@ -52,7 +59,7 @@
         }
     }
 
-    public abstract class StringArrayHeader : ISerializable<StringArrayHeader>
+    public abstract class StringArrayHeader : ISerializable<StringArrayHeader>, IArrayHeader
     {
         public StringArrayPage[] Pages { get; set; }
 

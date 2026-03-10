@@ -19,7 +19,7 @@ namespace TMP_Laba2
         public bool OpenToWriteFlag { get; set; } = true;
         public int PageUsingCount { get; set; } = 0;
         public int PageInMemoryTime { get; set; } = 0;
-        public int PageIndex { get; private set; }
+        //public int PageIndex { get; private set; }
 
         public int TotalElementsCount => _totalElementsCount;
         public int TotalSize => _totalSize;
@@ -74,8 +74,8 @@ namespace TMP_Laba2
             PageInMemoryTime = BitConverter.ToInt32(bytes, offset);
             offset += _pageInMemoryTimeSize;
 
-            PageIndex = BitConverter.ToInt32(bytes, offset);
-            offset += _pageIndexSize;
+            //PageIndex = BitConverter.ToInt32(bytes, offset);
+            //offset += _pageIndexSize;
         }
     }
 

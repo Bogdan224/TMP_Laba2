@@ -4,21 +4,25 @@
     {
         private static string _path = @$"C:\Users\{Environment.UserName}\Downloads\";
 
+        private IArrayHeader arrayHeader;
+        private ArrayType arrayType;
+
         private FileStream _header;
 
-        private FileManager(FileStream header)
+        private FileManager(FileStream fileHeader, IArrayHeader arrayHeader)
         {
-            _header = header;
+            _header = fileHeader;
         }
 
         public static FileManager CreateFiles(string filename, ushort recordLength = 20)
         {
+
             throw new NotImplementedException();
         }
 
         public static FileManager OpenFiles(string compFilename)
         {
-            //Десериализуем файл списка изделий
+
             throw new NotImplementedException();
         }
 

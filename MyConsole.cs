@@ -25,22 +25,22 @@ namespace TMP_Laba2
                 {
                     switch (commandText[0])
                     {
-                        case "Create":
-                            if (commandText.Length == 2)
-                                commands.Create(commandText[1]);
-                            else if (commandText.Length == 3)
-                                commands.Create(commandText[1], Convert.ToUInt16(commandText[2]));
-                            else if (commandText.Length == 4)
-                                commands.Create(commandText[1], Convert.ToUInt16(commandText[2]), commandText[3]);
-                            else
-                                throw new ArgumentException(paramNotFoundExceptionText);
-                            break;
+                        //case "Create":
+                        //    if (commandText.Length == 2)
+                        //        commands.Create(commandText[1]);
+                        //    else if (commandText.Length == 3)
+                        //        commands.Create(commandText[1], Convert.ToUInt16(commandText[2]));
+                        //    else if (commandText.Length == 4)
+                        //        commands.Create(commandText[1], Convert.ToUInt16(commandText[2]), commandText[3]);
+                        //    else
+                        //        throw new ArgumentException(paramNotFoundExceptionText);
+                        //    break;
 
-                        case "Open":
-                            if (commandText.Length != 2)
-                                throw new ArgumentException(paramNotFoundExceptionText);
-                            commands.Open(commandText[1]);
-                            break;
+                        //case "Open":
+                        //    if (commandText.Length != 2)
+                        //        throw new ArgumentException(paramNotFoundExceptionText);
+                        //    commands.Open(commandText[1]);
+                        //    break;
 
                         case "Input":
                             if (commandText.Length == 2 && commandText[1].Contains('/'))
@@ -208,17 +208,14 @@ namespace TMP_Laba2
         /// <param name="value">Значение</param>
         public void Input(string index, string value)
         {
-            //if (manager == null)
-            //    throw new FileNotFoundException(fileNotFoundExc);
+            if (manager == null)
+                throw new FileNotFoundException(fileNotFoundExc);
 
             if (value.First() == '\"' && value.Last() == '\"')
             {
-
-            }
-            if ()
-
-            //manager.AddValueToArray(new(index, value));
-
+                //manager.AddValueToArray(new(index, value));
+            }    
+            if (va)
 
             Console.WriteLine("Значение добавлено!");
         }

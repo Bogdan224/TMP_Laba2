@@ -26,5 +26,12 @@
         {
             _header?.Dispose();
         }
+
+        public void AddValueToArray(string index, string value)
+        {
+
+        }
+
+
     }
 }

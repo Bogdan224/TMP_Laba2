@@ -6,17 +6,17 @@
         public void FromBytes(byte[] bytes, ref int offset);
     }
 
-    public abstract class ArrayHeader : ISerializable<ArrayHeader>
+    public abstract class IntArrayHeader : ISerializable<IntArrayHeader>
     {
-        public ArrayPage[] Pages { get; set; }
-        
-        //public ArrayHeader(long arraySize, int elementSize)
-        //{
-        //    var tmp = new ArrayPage<T>(elementSize: elementSize, 0);
-        //    var pageCount = arraySize / tmp.TotalElementsCount;
+        public IntArrayPage[] Pages { get; set; }
 
-        //    Pages = new ArrayPage<T>[pageCount];
-        //}
+        public IntArrayHeader(long arraySize, int elementSize)
+        {
+            var tmp = new IntArrayPage(elementSize, 0);
+            var pageCount = arraySize / tmp.TotalElementsCount;
+
+            Pages = new IntArrayPage[pageCount];
+        }
 
         public byte[] ToBytes()
         {
@@ -28,4 +28,51 @@
             throw new NotImplementedException();
         }
     }
+
+    public abstract class CharArrayHeader : ISerializable<CharArrayHeader>
+    {
+        public CharArrayPage[] Pages { get; set; }
+
+        public CharArrayHeader(long arraySize)
+        {
+            var tmp = new CharArrayPage(2, 0);
+            var pageCount = arraySize / tmp.TotalElementsCount;
+
+            Pages = new CharArrayPage[pageCount];
+        }
+
+        public byte[] ToBytes()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void FromBytes(byte[] bytes, ref int offset)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public abstract class StringArrayHeader : ISerializable<StringArrayHeader>
+    {
+        public StringArrayPage[] Pages { get; set; }
+
+        public StringArrayHeader(long arraySize, int elementSize)
+        {
+            var tmp = new StringArrayPage(elementSize, 0);
+            var pageCount = arraySize / tmp.TotalElementsCount;
+
+            Pages = new StringArrayPage[pageCount];
+        }
+
+        public byte[] ToBytes()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void FromBytes(byte[] bytes, ref int offset)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
 }

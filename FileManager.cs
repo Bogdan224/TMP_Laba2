@@ -4,12 +4,12 @@
     {
         private static string _path = @$"C:\Users\{Environment.UserName}\Downloads\";
 
-        private IArrayHeader arrayHeader;
+        private ArrayHeader arrayHeader;
         private ArrayType arrayType;
 
         private FileStream _header;
 
-        private FileManager(FileStream fileHeader, IArrayHeader arrayHeader)
+        private FileManager(FileStream fileHeader, ArrayHeader arrayHeader)
         {
             _header = fileHeader;
         }

@@ -1,84 +1,64 @@
 ﻿namespace TMP_Laba2
 {
-    public interface ISerializable<T>
+    public interface ISerializable
     {
         public byte[] ToBytes();
         public void FromBytes(byte[] bytes, ref int offset);
     }
 
-    public interface IArrayHeader;
+    public abstract class ArrayHeader(int elementSize) : ISerializable
+    {
+        public int ElementSize => elementSize;
+        public int TotalElementsSize { get; protected set; }
+
+        public abstract ArrayPage[] Pages { get; set; }
+
+        public byte[] ToBytes()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void FromBytes(byte[] bytes, ref int offset)
+        {
+            throw new NotImplementedException();
+        }
+    }
 
     public enum ArrayType
     {
         Int, Char, String
     }
 
-    public abstract class IntArrayHeader : ISerializable<IntArrayHeader>, IArrayHeader
+    public abstract class IntArrayHeader : ArrayHeader
     {
-        public IntArrayPage[] Pages { get; set; }
-
-        public IntArrayHeader(long arraySize, int elementSize)
+        public IntArrayHeader(long arraySize) : base(4)
         {
-            var tmp = new IntArrayPage(elementSize, 0);
-            var pageCount = arraySize / tmp.TotalElementsCount;
+            TotalElementsSize = 512;
+            var pageCount = arraySize / ArrayPage.TotalElementsCount;
 
             Pages = new IntArrayPage[pageCount];
         }
+    }
 
-        public byte[] ToBytes()
+    public abstract class CharArrayHeader : ArrayHeader
+    {
+        public CharArrayHeader(long arraySize) : base(4)
         {
-            throw new NotImplementedException();
-        }
+            TotalElementsSize = 512;
+            var pageCount = arraySize / ArrayPage.TotalElementsCount;
 
-        public void FromBytes(byte[] bytes, ref int offset)
-        {
-            throw new NotImplementedException();
+            Pages = new IntArrayPage[pageCount];
         }
     }
 
-    public abstract class CharArrayHeader : ISerializable<CharArrayHeader>, IArrayHeader
+    public abstract class StringArrayHeader : ArrayHeader
     {
-        public CharArrayPage[] Pages { get; set; }
-
-        public CharArrayHeader(long arraySize)
+        public StringArrayHeader(long arraySize, int charCount) : base(charCount * 2)
         {
-            var tmp = new CharArrayPage(2, 0);
-            var pageCount = arraySize / tmp.TotalElementsCount;
-
-            Pages = new CharArrayPage[pageCount];
-        }
-
-        public byte[] ToBytes()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void FromBytes(byte[] bytes, ref int offset)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    public abstract class StringArrayHeader : ISerializable<StringArrayHeader>, IArrayHeader
-    {
-        public StringArrayPage[] Pages { get; set; }
-
-        public StringArrayHeader(long arraySize, int elementSize)
-        {
-            var tmp = new StringArrayPage(elementSize, 0);
-            var pageCount = arraySize / tmp.TotalElementsCount;
+            TotalElementsSize = (int)Math.Ceiling((double)(ArrayPage.TotalElementsCount * ElementSize) / 512) * 512;
+            var pageCount = arraySize / ArrayPage.TotalElementsCount;
 
             Pages = new StringArrayPage[pageCount];
-        }
-
-        public byte[] ToBytes()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void FromBytes(byte[] bytes, ref int offset)
-        {
-            throw new NotImplementedException();
         }
     }
 

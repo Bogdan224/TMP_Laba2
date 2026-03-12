@@ -4,14 +4,15 @@
     {
         private static string _path = @$"C:\Users\{Environment.UserName}\Downloads\";
 
-        private ArrayHeader arrayHeader;
-        private ArrayType arrayType;
+        private ArrayHeader _arrayHeader;
+        private ArrayType _arrayType;
 
         private FileStream _header;
 
         private FileManager(FileStream fileHeader, ArrayHeader arrayHeader)
         {
             _header = fileHeader;
+            _arrayHeader = arrayHeader;
         }
 
         public static FileManager CreateFiles(string filename, ushort recordLength = 20)

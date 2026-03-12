@@ -1,64 +1,65 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Collections;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace TMP_Laba2
 {
-    public abstract class ArrayPage : ISerializable
+    public abstract class ArrayPage : IPageSerializable
     {
-        protected const int _modificationFlagSize = 1;
-        protected const int _openToWriteFlagSize = 1;
-        protected const int _pageUsingCountSize = 4;
-        protected const int _pageInMemoryTimeSize = 4;
-        protected const int _pageIndexSize = 4;
+        private const int _modificationFlagSize = 1;
+        private const int _openToWriteFlagSize = 1;
+        private const int _pageUsingCountSize = 4;
+        private const int _pageInMemoryTimeSize = 4;
+        private const int _pageIndexSize = 4;
+        private const int _bitmapSize = TotalElementsCount / 8;
 
-        public static int TotalElementsCount => 128;
+        protected const int AdditionalFieldsSize = _modificationFlagSize + _openToWriteFlagSize
+           + _pageUsingCountSize + _pageInMemoryTimeSize + _pageIndexSize + TotalElementsCount;
 
-        public static int AdditionalFieldsSize => _modificationFlagSize + _openToWriteFlagSize
-            + _pageUsingCountSize + _pageInMemoryTimeSize + TotalElementsCount;
+        public const int TotalElementsCount = 128;
 
         public bool ModificationFlag { get; set; } = false;
         public bool OpenToWriteFlag { get; set; } = true;
         public int PageUsingCount { get; set; } = 0;
         public int PageInMemoryTime { get; set; } = 0;
-        //public int PageIndex { get; private set; }
+        public int PageIndex { get; set; }
 
-        public bool[] BitMap { get; }
+        public BitArray Bitmap { get; private set; }
 
         public ArrayPage()
         {
-            //PageIndex = pageIndex;
-
-            BitMap = new bool[TotalElementsCount];
+            Bitmap = new BitArray(TotalElementsCount);
         }
 
-        public virtual byte[] ToBytes()
+        public virtual byte[] ToBytes(int elementSize = 0)
         {
             byte[] bytes = new byte[AdditionalFieldsSize];
             int offset = 0;
 
-            Array.Copy(BitConverter.GetBytes(ModificationFlag), 0, bytes, offset, _modificationFlagSize);
+            BitConverter.GetBytes(ModificationFlag).CopyTo(bytes, offset);
             offset += _modificationFlagSize;
 
-            Array.Copy(BitConverter.GetBytes(OpenToWriteFlag), 0, bytes, offset, _openToWriteFlagSize);
+            BitConverter.GetBytes(OpenToWriteFlag).CopyTo(bytes, offset);
             offset += _openToWriteFlagSize;
 
-            Array.Copy(BitConverter.GetBytes(PageUsingCount), 0, bytes, offset, _pageUsingCountSize);
+            BitConverter.GetBytes(PageUsingCount).CopyTo(bytes, offset);
             offset += _pageUsingCountSize;
 
-            Array.Copy(BitConverter.GetBytes(PageInMemoryTime), 0, bytes, offset, _pageInMemoryTimeSize);
+            BitConverter.GetBytes(PageInMemoryTime).CopyTo(bytes, offset);
             offset += _pageInMemoryTimeSize;
 
-            //Array.Copy(BitConverter.GetBytes(PageIndex), 0, bytes, offset, _pageIndexSize);
-            foreach (var item in BitMap)
-            {
-                Array.Copy(BitConverter.GetBytes(item), 0, bytes, offset, 1);
-                offset += 1;
-            }
+            Array.Copy(BitConverter.GetBytes(PageIndex), 0, bytes, offset, _pageIndexSize);
+            offset += _pageIndexSize;
+
+            byte[] bitmapBytes = new byte[_bitmapSize];
+            Bitmap.CopyTo(bitmapBytes, 0);
+            bitmapBytes.CopyTo(bytes, offset);
+            offset += _bitmapSize;
 
             return bytes;
         }
 
-        public virtual void FromBytes(byte[] bytes, ref int offset)
+        public virtual void FromBytes(byte[] bytes, ref int offset, int elementSize = 0)
         {
             ModificationFlag = BitConverter.ToBoolean(bytes, offset);
             offset += _modificationFlagSize;
@@ -72,14 +73,18 @@ namespace TMP_Laba2
             PageInMemoryTime = BitConverter.ToInt32(bytes, offset);
             offset += _pageInMemoryTimeSize;
 
-            //PageIndex = BitConverter.ToInt32(bytes, offset);
-            //offset += _pageIndexSize;
+            PageIndex = BitConverter.ToInt32(bytes, offset);
+            offset += _pageIndexSize;
+
+            byte[] bitmapBytes = new byte[_bitmapSize];
+            Array.Copy(bytes, offset, bitmapBytes, 0, _bitmapSize);
+            Bitmap = new BitArray(bitmapBytes);
+            offset += _bitmapSize;
         }
     }
 
     public class IntArrayPage : ArrayPage
     {
-        public static int ElementSize => 4;
         public int[] Elements { get; }
 
         public IntArrayPage()
@@ -87,36 +92,35 @@ namespace TMP_Laba2
             Elements = new int[TotalElementsCount];
         }
 
-        public override byte[] ToBytes()
+        public override byte[] ToBytes(int elementSize)
         {
-            byte[] bytes = new byte[TotalElementsCount * ElementSize];
+            byte[] bytes = new byte[TotalElementsCount * elementSize];
             int offset = 0;
 
             foreach (var element in Elements)
             {
-                Array.Copy(BitConverter.GetBytes(element), 0, bytes, offset, ElementSize);
-                offset += ElementSize;
+                Array.Copy(BitConverter.GetBytes(element), 0, bytes, offset, elementSize);
+                offset += elementSize;
             }
 
-            bytes = base.ToBytes().Concat(bytes).ToArray();
+            bytes = base.ToBytes(elementSize).Concat(bytes).ToArray();
 
             return bytes;
         }
 
-        public override void FromBytes(byte[] bytes, ref int offset)
+        public override void FromBytes(byte[] bytes, ref int offset, int elementSize)
         {
-            base.FromBytes(bytes, ref offset);
+            base.FromBytes(bytes, ref offset, elementSize);
             for (int i = 0; i < Elements.Length; i++)
             {
                 Elements[i] = BitConverter.ToInt32(bytes, offset);
-                offset += ElementSize;
+                offset += elementSize;
             }
         }
     }
 
     public class CharArrayPage : ArrayPage
     {
-        public static int ElementSize => 2;
         public char[] Elements { get; }
 
         public CharArrayPage()
@@ -124,36 +128,35 @@ namespace TMP_Laba2
             Elements = new char[TotalElementsCount];
         }
 
-        public override byte[] ToBytes()
+        public override byte[] ToBytes(int elementSize)
         {
-            byte[] bytes = new byte[TotalElementsCount * ElementSize];
+            byte[] bytes = new byte[TotalElementsCount * elementSize];
             int offset = 0;
 
             foreach (var element in Elements)
             {
-                Array.Copy(BitConverter.GetBytes(element), 0, bytes, offset, ElementSize);
-                offset += ElementSize;
+                Array.Copy(BitConverter.GetBytes(element), 0, bytes, offset, elementSize);
+                offset += elementSize;
             }
 
-            bytes = base.ToBytes().Concat(bytes).ToArray();
+            bytes = base.ToBytes(elementSize).Concat(bytes).ToArray();
 
             return bytes;
         }
 
-        public override void FromBytes(byte[] bytes, ref int offset)
+        public override void FromBytes(byte[] bytes, ref int offset, int elementSize)
         {
-            base.FromBytes(bytes, ref offset);
+            base.FromBytes(bytes, ref offset, elementSize);
             for (int i = 0; i < Elements.Length; i++)
             {
                 Elements[i] = BitConverter.ToChar(bytes, offset);
-                offset += ElementSize;
+                offset += elementSize;
             }
         }
     }
 
     public class StringArrayPage : ArrayPage
     {
-        public static int ElementSize { get; private set; }
         public string[] Elements { get; }
 
         public StringArrayPage()
@@ -161,29 +164,29 @@ namespace TMP_Laba2
             Elements = new string[TotalElementsCount];
         }
 
-        public override byte[] ToBytes()
+        public override byte[] ToBytes(int elementSize)
         {
-            byte[] bytes = new byte[TotalElementsCount * ElementSize];
+            byte[] bytes = new byte[TotalElementsCount * elementSize];
             int offset = 0;
 
             foreach (var element in Elements)
             {
-                Array.Copy(Encoding.UTF8.GetBytes(element), 0, bytes, offset, ElementSize);
-                offset += ElementSize;
+                Array.Copy(Encoding.UTF8.GetBytes(element), 0, bytes, offset, elementSize);
+                offset += elementSize;
             }
 
-            bytes = base.ToBytes().Concat(bytes).ToArray();
+            bytes = base.ToBytes(elementSize).Concat(bytes).ToArray();
 
             return bytes;
         }
 
-        public override void FromBytes(byte[] bytes, ref int offset)
+        public override void FromBytes(byte[] bytes, ref int offset, int elementSize)
         {
-            base.FromBytes(bytes, ref offset);
+            base.FromBytes(bytes, ref offset, elementSize);
             for (int i = 0; i < Elements.Length; i++)
             {
-                Elements[i] = Encoding.UTF8.GetString(bytes, offset, ElementSize);
-                offset += ElementSize;
+                Elements[i] = Encoding.UTF8.GetString(bytes, offset, elementSize);
+                offset += elementSize;
             }
         }
     }

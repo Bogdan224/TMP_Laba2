@@ -39,6 +39,29 @@ namespace TMP_Laba2
             FromBytes(bytes, ref offset);
         }
 
+        private void FromBytes(byte[] bytes, ref int offset)
+        {
+            ModificationFlag = BitConverter.ToBoolean(bytes, offset);
+            offset += _modificationFlagSize;
+
+            OpenToWriteFlag = BitConverter.ToBoolean(bytes, offset);
+            offset += _openToWriteFlagSize;
+
+            PageUsingCount = BitConverter.ToInt32(bytes, offset);
+            offset += _pageUsingCountSize;
+
+            PageInMemoryTime = BitConverter.ToInt32(bytes, offset);
+            offset += _pageInMemoryTimeSize;
+
+            PageIndex = BitConverter.ToInt32(bytes, offset);
+            offset += _pageIndexSize;
+
+            byte[] bitmapBytes = new byte[_bitmapSize];
+            Array.Copy(bytes, offset, bitmapBytes, 0, _bitmapSize);
+            Bitmap = new BitArray(bitmapBytes);
+            offset += _bitmapSize;
+        }
+
         public virtual byte[] ToBytes(int elementSize = 0)
         {
             byte[] bytes = new byte[AdditionalFieldsSize];
@@ -67,27 +90,15 @@ namespace TMP_Laba2
             return bytes;
         }
 
-        private void FromBytes(byte[] bytes, ref int offset)
+        public void SetElementByIndex(int index, object value)
         {
-            ModificationFlag = BitConverter.ToBoolean(bytes, offset);
-            offset += _modificationFlagSize;
+            if (!OpenToWriteFlag)
+                throw new Exception("Страница закрыта для записи!");
 
-            OpenToWriteFlag = BitConverter.ToBoolean(bytes, offset);
-            offset += _openToWriteFlagSize;
-
-            PageUsingCount = BitConverter.ToInt32(bytes, offset);
-            offset += _pageUsingCountSize;
-
-            PageInMemoryTime = BitConverter.ToInt32(bytes, offset);
-            offset += _pageInMemoryTimeSize;
-
-            PageIndex = BitConverter.ToInt32(bytes, offset);
-            offset += _pageIndexSize;
-
-            byte[] bitmapBytes = new byte[_bitmapSize];
-            Array.Copy(bytes, offset, bitmapBytes, 0, _bitmapSize);
-            Bitmap = new BitArray(bitmapBytes);
-            offset += _bitmapSize;
+            Elements.SetValue(value, index);
+            Bitmap.Set(index, true);
+            ModificationFlag = true;
+            PageUsingCount++;
         }
     }
 

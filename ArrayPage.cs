@@ -13,6 +13,8 @@ namespace TMP_Laba2
         private const int _pageIndexSize = 4;
         private const int _bitmapSize = TotalElementsCount / 8;
 
+        protected Array elements = null!;
+
         protected const int AdditionalFieldsSize = _modificationFlagSize + _openToWriteFlagSize
            + _pageUsingCountSize + _pageInMemoryTimeSize + _pageIndexSize + TotalElementsCount;
 
@@ -24,11 +26,17 @@ namespace TMP_Laba2
         public int PageInMemoryTime { get; set; } = 0;
         public int PageIndex { get; set; }
 
+        public Array Elements => elements;
         public BitArray Bitmap { get; private set; }
 
         public ArrayPage()
         {
             Bitmap = new BitArray(TotalElementsCount);
+        }
+
+        public ArrayPage(byte[] bytes, ref int offset) : this()
+        {
+            FromBytes(bytes, ref offset);
         }
 
         public virtual byte[] ToBytes(int elementSize = 0)
@@ -59,7 +67,7 @@ namespace TMP_Laba2
             return bytes;
         }
 
-        public virtual void FromBytes(byte[] bytes, ref int offset, int elementSize = 0)
+        private void FromBytes(byte[] bytes, ref int offset)
         {
             ModificationFlag = BitConverter.ToBoolean(bytes, offset);
             offset += _modificationFlagSize;
@@ -85,14 +93,23 @@ namespace TMP_Laba2
 
     public class IntArrayPage : ArrayPage
     {
-        public int[] Elements { get; }
+        private const int elementSize = 4;
+
+        public new int[] Elements => (int[])elements;
 
         public IntArrayPage()
         {
-            Elements = new int[TotalElementsCount];
+            elements = new int[TotalElementsCount];
         }
 
-        public override byte[] ToBytes(int elementSize)
+        public IntArrayPage(byte[] bytes, ref int offset, int elementSize = 4) : base(bytes, ref offset)
+        {
+            elements = new int[TotalElementsCount];
+
+            FromBytes(bytes, ref offset, elementSize);
+        }
+
+        public override byte[] ToBytes(int elementSize = elementSize)
         {
             byte[] bytes = new byte[TotalElementsCount * elementSize];
             int offset = 0;
@@ -108,9 +125,8 @@ namespace TMP_Laba2
             return bytes;
         }
 
-        public override void FromBytes(byte[] bytes, ref int offset, int elementSize)
+        private void FromBytes(byte[] bytes, ref int offset, int elementSize = elementSize)
         {
-            base.FromBytes(bytes, ref offset, elementSize);
             for (int i = 0; i < Elements.Length; i++)
             {
                 Elements[i] = BitConverter.ToInt32(bytes, offset);
@@ -121,14 +137,23 @@ namespace TMP_Laba2
 
     public class CharArrayPage : ArrayPage
     {
-        public char[] Elements { get; }
+        private const int elementSize = 2;
+
+        public new char[] Elements => (char[])elements;
 
         public CharArrayPage()
         {
-            Elements = new char[TotalElementsCount];
+            elements = new char[TotalElementsCount];
         }
 
-        public override byte[] ToBytes(int elementSize)
+        public CharArrayPage(byte[] bytes, ref int offset) : base(bytes, ref offset)
+        {
+            elements = new char[TotalElementsCount];
+
+            FromBytes(bytes, ref offset, elementSize);
+        }
+
+        public override byte[] ToBytes(int elementSize = elementSize)
         {
             byte[] bytes = new byte[TotalElementsCount * elementSize];
             int offset = 0;
@@ -144,9 +169,8 @@ namespace TMP_Laba2
             return bytes;
         }
 
-        public override void FromBytes(byte[] bytes, ref int offset, int elementSize)
+        private void FromBytes(byte[] bytes, ref int offset, int elementSize = elementSize)
         {
-            base.FromBytes(bytes, ref offset, elementSize);
             for (int i = 0; i < Elements.Length; i++)
             {
                 Elements[i] = BitConverter.ToChar(bytes, offset);
@@ -157,11 +181,18 @@ namespace TMP_Laba2
 
     public class StringArrayPage : ArrayPage
     {
-        public string[] Elements { get; }
+        public new string[] Elements => (string[])elements;
 
         public StringArrayPage()
         {
-            Elements = new string[TotalElementsCount];
+            elements = new string[TotalElementsCount];
+        }
+
+        public StringArrayPage(byte[] bytes, ref int offset, int elementSize) : base(bytes, ref offset)
+        {
+            elements = new string[TotalElementsCount];
+
+            FromBytes(bytes, ref offset, elementSize);
         }
 
         public override byte[] ToBytes(int elementSize)
@@ -180,9 +211,8 @@ namespace TMP_Laba2
             return bytes;
         }
 
-        public override void FromBytes(byte[] bytes, ref int offset, int elementSize)
+        private void FromBytes(byte[] bytes, ref int offset, int elementSize)
         {
-            base.FromBytes(bytes, ref offset, elementSize);
             for (int i = 0; i < Elements.Length; i++)
             {
                 Elements[i] = Encoding.UTF8.GetString(bytes, offset, elementSize);

@@ -1,28 +1,53 @@
-﻿namespace TMP_Laba2
+﻿using System.Collections;
+
+namespace TMP_Laba2
 {
     public interface IPageSerializable
     {
         public byte[] ToBytes(int elementSize);
-        public void FromBytes(byte[] bytes, ref int offset, int elementSize);
     }
 
     public interface IHeaderSerializable
     {
         public byte[] ToBytes();
-        public void FromBytes(byte[] bytes, ref int offset, int pageCount = 3);
     }
 
-    public abstract class ArrayHeader(long arraySize, int elementSize = 0) : IHeaderSerializable
+    public abstract class ArrayHeader : IHeaderSerializable
     {
         private const int _elementSize = 4;
         private const int _totalPageElementsSize = 4;
         private const int _arraySize = 8;
+        private const int _arrayTypeSize = 1;
 
-        private const int AdditionalFieldsSize = _elementSize + _totalPageElementsSize;
+        private ArrayType arrayType;
 
-        public long ArraySize { get; private set; } = arraySize;
-        public int ElementSize { get; private set; } = elementSize;
+        protected const int AdditionalFieldsSize = _elementSize 
+            + _totalPageElementsSize + _arraySize + _arrayTypeSize;
+
+        protected IList pages = null!;
+
+        public long ArraySize { get; private set; }
+        public long PageCount { get; private set; }
         public int TotalPageElementsSize { get; protected set; }
+        public int ElementSize { get; private set; }
+
+        public IList Pages => pages;
+
+        public ArrayHeader(ArrayType arrayType, long arraySize, int elementSize)
+        {
+            this.arrayType = arrayType;
+            ArraySize = arraySize;
+            ElementSize = elementSize;
+
+            PageCount = ArraySize / ArrayPage.TotalElementsCount;
+        }
+
+        public ArrayHeader(byte[] bytes, ref int offset)
+        {
+            PageCount = ArraySize / ArrayPage.TotalElementsCount;
+
+            FromBytes(bytes, ref offset);
+        }
 
         public virtual byte[] ToBytes()
         {
@@ -35,34 +60,55 @@
             BitConverter.GetBytes(TotalPageElementsSize).CopyTo(bytes, offset);
             offset += _totalPageElementsSize;
 
+            BitConverter.GetBytes(ArraySize).CopyTo(bytes, offset);
+            offset += _arraySize;
+
+            bytes[offset] = (byte)arrayType;
+            offset += _arrayTypeSize;
+
             return bytes;
         }
 
-        public virtual void FromBytes(byte[] bytes, ref int offset, int pageCount = 3)
+        private void FromBytes(byte[] bytes, ref int offset)
         {
             ElementSize = BitConverter.ToInt32(bytes, offset);
             offset += _elementSize;
 
             TotalPageElementsSize = BitConverter.ToInt32(bytes, offset);
             offset += _totalPageElementsSize;
+
+            ArraySize = BitConverter.ToInt64(bytes, offset);
+            offset += _arraySize;
+
+            arrayType = (ArrayType)bytes[offset];
+            offset += _arrayTypeSize;
         }
     }
 
-    public enum ArrayType
+    public enum ArrayType : byte
     {
         Int, Char, String
     }
 
     public abstract class IntArrayHeader : ArrayHeader
     {
-        public List<IntArrayPage> Pages { get; set; }
+        public new List<IntArrayPage> Pages => (List<IntArrayPage>)pages;
 
-        public IntArrayHeader(long arraySize) : base(4)
+        public IntArrayHeader(long arraySize) : base(ArrayType.Int, arraySize, 4)
         {
             TotalPageElementsSize = 512;
             var pageCount = arraySize / ArrayPage.TotalElementsCount;
 
-            Pages = new();
+            pages = new List<IntArrayPage>();
+        }
+
+        public IntArrayHeader(long arraySize, byte[] bytes, ref int offset, int pageCount = 3) : base(bytes, ref offset)
+        {
+            TotalPageElementsSize = 512;
+
+            pages = new List<IntArrayPage>();
+
+            FromBytes(bytes, ref offset, pageCount);
         }
 
         public override byte[] ToBytes()
@@ -72,21 +118,18 @@
 
             foreach (var item in Pages)
             {
-                item.ToBytes(ElementSize).CopyTo(bytes, offset);
+                item.ToBytes().CopyTo(bytes, offset);
                 offset += TotalPageElementsSize;
             }
 
             return [.. base.ToBytes(), .. bytes];
         }
 
-        public override void FromBytes(byte[] bytes, ref int offset, int pageCount = 3)
+        private void FromBytes(byte[] bytes, ref int offset, int pageCount = 3)
         {
-            base.FromBytes(bytes, ref offset, pageCount);
-
             for(int i = 0; i < pageCount; i++)
             {
-                var page = new IntArrayPage();
-                page.FromBytes(bytes, ref offset, ElementSize);
+                var page = new IntArrayPage(bytes, ref offset, ElementSize);
                 Pages.Add(page);
             }
         }
@@ -94,14 +137,23 @@
 
     public abstract class CharArrayHeader : ArrayHeader
     {
-        public List<CharArrayPage> Pages { get; set; }
+        public new List<CharArrayPage> Pages => (List<CharArrayPage>)pages;
 
-        public CharArrayHeader(long arraySize) : base(2)
+        public CharArrayHeader(long arraySize) : base(ArrayType.Char, arraySize, 2)
         {
             TotalPageElementsSize = 512;
             var pageCount = arraySize / ArrayPage.TotalElementsCount;
 
-            Pages = new();
+            pages = new List<CharArrayPage>();
+        }
+
+        public CharArrayHeader(byte[] bytes, ref int offset, int pageCount = 3) : base(bytes, ref offset)
+        {
+            TotalPageElementsSize = 512;
+
+            pages = new List<CharArrayPage>();
+
+            FromBytes(bytes, ref offset, pageCount);
         }
 
         public override byte[] ToBytes()
@@ -111,21 +163,18 @@
 
             foreach (var item in Pages)
             {
-                item.ToBytes(ElementSize).CopyTo(bytes, offset);
+                item.ToBytes().CopyTo(bytes, offset);
                 offset += TotalPageElementsSize;
             }
 
             return [.. base.ToBytes(), .. bytes];
         }
 
-        public override void FromBytes(byte[] bytes, ref int offset, int pageCount = 3)
+        private void FromBytes(byte[] bytes, ref int offset, int pageCount = 3)
         {
-            base.FromBytes(bytes, ref offset, pageCount);
-
             for (int i = 0; i < pageCount; i++)
             {
-                var page = new CharArrayPage();
-                page.FromBytes(bytes, ref offset, ElementSize);
+                var page = new CharArrayPage(bytes, ref offset);
                 Pages.Add(page);
             }
         }
@@ -133,13 +182,22 @@
 
     public abstract class StringArrayHeader : ArrayHeader
     {
-        public List<StringArrayPage> Pages { get; set; }
+        public new List<StringArrayPage> Pages => (List<StringArrayPage>)pages;
 
-        public StringArrayHeader(long arraySize, int charCount) : base(charCount * 2)
+        public StringArrayHeader(long arraySize, int charCount) : base(ArrayType.String, arraySize, charCount * 2)
         {
             TotalPageElementsSize = (int)Math.Ceiling((double)(ArrayPage.TotalElementsCount * ElementSize) / 512) * 512;
 
-            Pages = new();
+            pages = new List<IntArrayPage>();
+        }
+
+        public StringArrayHeader(byte[] bytes, ref int offset, int pageCount = 3) : base(bytes, ref offset)
+        {
+            TotalPageElementsSize = (int)Math.Ceiling((double)(ArrayPage.TotalElementsCount * ElementSize) / 512) * 512;
+
+            pages = new List<CharArrayPage>();
+
+            FromBytes(bytes, ref offset, pageCount);
         }
 
         public override byte[] ToBytes()
@@ -156,14 +214,11 @@
             return [.. base.ToBytes(), .. bytes];
         }
 
-        public override void FromBytes(byte[] bytes, ref int offset, int pageCount = 3)
+        private void FromBytes(byte[] bytes, ref int offset, int pageCount = 3)
         {
-            base.FromBytes(bytes, ref offset, pageCount);
-
             for (int i = 0; i < pageCount; i++)
             {
-                var page = new StringArrayPage();
-                page.FromBytes(bytes, ref offset, ElementSize);
+                var page = new StringArrayPage(bytes, ref offset, ElementSize);
                 Pages.Add(page);
             }
         }

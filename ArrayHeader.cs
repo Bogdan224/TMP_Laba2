@@ -19,12 +19,12 @@ namespace TMP_Laba2
         private const int _arraySize = 8;
         private const int _arrayTypeSize = 1;
 
-        private ArrayType arrayType;
-
-        protected const int AdditionalFieldsSize = _elementSize 
-            + _totalPageElementsSize + _arraySize + _arrayTypeSize;
-
         protected IList pages = null!;
+
+        public ArrayType ArrayType { get; private set; }
+
+        public int AdditionalFieldsSize => _elementSize
+           + _totalPageElementsSize + _arraySize + _arrayTypeSize;
 
         public long ArraySize { get; private set; }
         public long PageCount { get; private set; }
@@ -35,15 +35,16 @@ namespace TMP_Laba2
 
         public ArrayHeader(ArrayType arrayType, long arraySize, int elementSize)
         {
-            this.arrayType = arrayType;
+            ArrayType = arrayType;
             ArraySize = arraySize;
             ElementSize = elementSize;
 
             PageCount = ArraySize / ArrayPage.TotalElementsCount;
         }
 
-        public ArrayHeader(byte[] bytes, ref int offset)
+        public ArrayHeader(byte[] bytes, long arraySize, ref int offset)
         {
+            ArraySize = arraySize;
             PageCount = ArraySize / ArrayPage.TotalElementsCount;
 
             FromBytes(bytes, ref offset);
@@ -63,7 +64,7 @@ namespace TMP_Laba2
             BitConverter.GetBytes(ArraySize).CopyTo(bytes, offset);
             offset += _arraySize;
 
-            bytes[offset] = (byte)arrayType;
+            bytes[offset] = (byte)ArrayType;
             offset += _arrayTypeSize;
 
             return bytes;
@@ -80,7 +81,7 @@ namespace TMP_Laba2
             ArraySize = BitConverter.ToInt64(bytes, offset);
             offset += _arraySize;
 
-            arrayType = (ArrayType)bytes[offset];
+            ArrayType = (ArrayType)bytes[offset];
             offset += _arrayTypeSize;
         }
     }
@@ -90,7 +91,7 @@ namespace TMP_Laba2
         Int, Char, String
     }
 
-    public abstract class IntArrayHeader : ArrayHeader
+    public class IntArrayHeader : ArrayHeader
     {
         public new List<IntArrayPage> Pages => (List<IntArrayPage>)pages;
 
@@ -102,7 +103,7 @@ namespace TMP_Laba2
             pages = new List<IntArrayPage>();
         }
 
-        public IntArrayHeader(long arraySize, byte[] bytes, ref int offset, int pageCount = 3) : base(bytes, ref offset)
+        public IntArrayHeader(long arraySize, byte[] bytes, ref int offset, int pageCount = 3) : base(bytes, arraySize, ref offset)
         {
             TotalPageElementsSize = 512;
 
@@ -135,7 +136,7 @@ namespace TMP_Laba2
         }
     }
 
-    public abstract class CharArrayHeader : ArrayHeader
+    public class CharArrayHeader : ArrayHeader
     {
         public new List<CharArrayPage> Pages => (List<CharArrayPage>)pages;
 
@@ -147,7 +148,7 @@ namespace TMP_Laba2
             pages = new List<CharArrayPage>();
         }
 
-        public CharArrayHeader(byte[] bytes, ref int offset, int pageCount = 3) : base(bytes, ref offset)
+        public CharArrayHeader(long arraySize, byte[] bytes, ref int offset, int pageCount = 3) : base(bytes, arraySize, ref offset)
         {
             TotalPageElementsSize = 512;
 
@@ -180,7 +181,7 @@ namespace TMP_Laba2
         }
     }
 
-    public abstract class StringArrayHeader : ArrayHeader
+    public class StringArrayHeader : ArrayHeader
     {
         public new List<StringArrayPage> Pages => (List<StringArrayPage>)pages;
 
@@ -191,7 +192,7 @@ namespace TMP_Laba2
             pages = new List<IntArrayPage>();
         }
 
-        public StringArrayHeader(byte[] bytes, ref int offset, int pageCount = 3) : base(bytes, ref offset)
+        public StringArrayHeader(long arraySize, byte[] bytes, ref int offset, int pageCount = 3) : base(bytes, arraySize, ref offset)
         {
             TotalPageElementsSize = (int)Math.Ceiling((double)(ArrayPage.TotalElementsCount * ElementSize) / 512) * 512;
 

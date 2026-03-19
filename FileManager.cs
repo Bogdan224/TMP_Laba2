@@ -8,28 +8,29 @@ namespace TMP_Laba2
 
         private ArrayHeader _arrayHeader;
 
-        private FileStream _header;
+        private FileStream _filestream;
 
         private FileManager(FileStream fileHeader, ArrayHeader arrayHeader)
         {
-            _header = fileHeader;
+            _filestream = fileHeader;
             _arrayHeader = arrayHeader;
         }
 
         public static FileManager CreateIntArrayFiles(string filename, long arraySize = 10000)
         {
             int[] array = new int[arraySize];
-            byte[] buffer = new byte[arraySize * 4];
+            long arrayBytes = arraySize * 4;
+            byte[] buffer = new byte[arrayBytes];
             int offset = 0;
 
-            var filestream = new FileStream(filename, FileMode.Create);
+            var filestream = new FileStream(_path + filename, FileMode.Create);
             
             var header = new IntArrayHeader(arraySize);
 
-            Array.Copy(header.ToBytes(), buffer, header.AdditionalFieldsSize);
+            buffer = header.ToBytes().Concat(buffer).ToArray();
             offset += header.AdditionalFieldsSize;
 
-            Buffer.BlockCopy(array, 0, buffer, offset, buffer.Length);
+            Buffer.BlockCopy(array, 0, buffer, offset, Convert.ToInt32(arrayBytes));
 
             filestream.Write(buffer);
 
@@ -90,10 +91,17 @@ namespace TMP_Laba2
             throw new NotImplementedException();
         }
 
+        private void UpdateFile(byte[] bytes, int offset, int length)
+        {
+            _filestream.Seek(offset, SeekOrigin.Begin);
+            _filestream.Write(bytes, offset, length);
+        }
+
         public void Dispose()
         {
-            _header?.Dispose();
+            _filestream?.Dispose();
         }
+
 
         public void AddValueToArray(string index, string value)
         {

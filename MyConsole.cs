@@ -36,11 +36,11 @@ namespace TMP_Laba2
                                 throw new ArgumentException(paramNotFoundExceptionText);
                             break;
 
-                        ////case "Open":
-                        ////    if (commandText.Length != 2)
-                        ////        throw new ArgumentException(paramNotFoundExceptionText);
-                        ////    commands.Open(commandText[1]);
-                        ////    break;
+                        //case "Open":
+                        //    if (commandText.Length != 2)
+                        //        throw new ArgumentException(paramNotFoundExceptionText);
+                        //    commands.Open(commandText[1]);
+                        //    break;
 
                         //case "Input":
                         //    if (commandText.Length == 2 && commandText[1].Contains('/'))
@@ -120,12 +120,12 @@ namespace TMP_Laba2
             if (filename.EndsWith(".prd") && filename.Length <= 16)
                 return true;
             return false;
-        } 
+        }
 
         public void Create(string filename, ArrayType arrayType, int length = 10000)
         {
-            //if (!CheckFilename(filename))
-            //    throw new Exception("Нельзя создать файл с заданным расширением!");
+            if (!CheckFilename(filename))
+                throw new Exception("Нельзя создать файл с заданным расширением!");
 
             if (manager != null)
                 manager.Dispose();
@@ -231,6 +231,55 @@ namespace TMP_Laba2
             help.Append("Exit — закрывает все файлы и завершает программу. Файлы при завершении программы не уничтожаются.\n");
 
             Console.Write(help.ToString());
+        }
+
+        public void Input(string index, string value)
+        {
+            if (manager == null)
+                throw new FileNotFoundException(fileNotFoundExc);
+
+            if (index != null && value != null)
+                throw new ArgumentNullException();
+
+            int.TryParse(index, out int _index);
+
+            if (CheckInt(value))
+            {
+                int.TryParse(value, out int _value);
+
+                manager.AddValueToArray(_index, _value);
+            }
+
+            if (CheckString(value))
+            {
+                manager.AddValueToArray(_index, value);
+            }
+
+            if (CheckChar(value))
+            {
+                char _value = value[0];
+
+                manager.AddValueToArray(_index, _value);
+            }
+        }
+
+        public static bool CheckInt(string value)
+        {
+            if (int.TryParse(value, out _)) return true;
+            return false;
+        }
+
+        public static bool CheckString(string value)
+        {
+            if (value.First() == '\"' && value.Last() == '\"') return true;
+            return false;
+        }
+
+        public static bool CheckChar(string value)
+        {
+            if (value.First() == '\'' && value.Last() == '\'' 
+                && value.Length == 1 && !int.TryParse(value, out _)) return true;
+            return false;
         }
 
     }

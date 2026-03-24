@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Reflection.PortableExecutable;
+using System.Text;
 
 namespace TMP_Laba2
 {
@@ -9,6 +10,9 @@ namespace TMP_Laba2
         private ArrayHeader _arrayHeader;
 
         private FileStream _filestream;
+
+        private const int PageSize = 526;
+        private const int ElementsPerPage = 128;
 
         private FileManager(FileStream fileHeader, ArrayHeader arrayHeader)
         {
@@ -103,7 +107,31 @@ namespace TMP_Laba2
         }
 
 
-        public void AddValueToArray(string index, string value)
+        public void AddValueToArray(int index, int value)
+        {
+            if (_arrayHeader.ArrayType != ArrayType.Int) throw new NotImplementedException();
+
+            byte[] buffer = new byte[PageSize];
+
+            int pageIndex = index / ElementsPerPage;
+
+            _filestream.Read(buffer, (pageIndex - 1) * PageSize, PageSize);
+
+            var page = new IntArrayPage(buffer, ref pageIndex);
+
+            var elements = page.Elements;
+
+            elements[index] = value;
+        }
+
+        public void AddValueToArray(int index, string value)
+        {
+            if (_arrayHeader.ArrayType != ArrayType.String) throw new NotImplementedException();
+
+
+        }
+
+        public void AddValueToArray(int index, char value)
         {
 
         }

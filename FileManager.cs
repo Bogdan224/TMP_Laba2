@@ -158,10 +158,28 @@ namespace TMP_Laba2
 
         public void AddValueToArray(int index, string value)
         {
-            if (_arrayHeader.ArrayType != ArrayType.String) throw new NotImplementedException();
+            if (_arrayHeader.ArrayType != ArrayType.String) 
+                throw new NotImplementedException();
 
-            GetPageIndex(index);
-            //var page = new StringArrayPage(_currentPageBuffer, ref index);
+            int offset = GetPageIndex(index);
+
+            byte[] buff = new byte[_pageSize];
+
+            _filestream.Seek(offset, SeekOrigin.Begin);
+            _filestream.Read(buff, 0, _pageSize);
+
+            int pageOffset = 0;
+
+            var page = new StringArrayPage(buff, ref pageOffset, _arrayHeader.ElementSize);
+
+            int localIndex = index % _elementsPerPage;
+
+            page.SetElementByIndex(localIndex, value);
+
+            byte[] pageBytes = page.ToBytes(_arrayHeader.ElementSize);
+
+            _filestream.Seek(offset, SeekOrigin.Begin);
+            _filestream.Write(pageBytes, 0, pageBytes.Length);
         }
 
         public void AddValueToArray(int index, char value)

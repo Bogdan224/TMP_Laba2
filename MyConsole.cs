@@ -246,7 +246,9 @@ namespace TMP_Laba2
 
             else if (CheckString(value))
             {
-                manager.AddValueToArray(_index, value);
+                string _value = value.Replace("\"", "");
+
+                manager.AddValueToArray(_index, _value);
             }
 
             else if (CheckChar(value))

@@ -1,4 +1,6 @@
-﻿using System.Reflection.PortableExecutable;
+﻿using System.IO;
+using System.IO.Pipes;
+using System.Reflection.PortableExecutable;
 using System.Text;
 
 namespace TMP_Laba2
@@ -13,7 +15,7 @@ namespace TMP_Laba2
 
         private byte[] _currentPageBuffer;
 
-        private const int PageSize = 526;
+        private const int PageSize = 526 + 16;
         private const int ElementsPerPage = 128;
 
         private FileManager(FileStream fileHeader, ArrayHeader arrayHeader)
@@ -39,8 +41,9 @@ namespace TMP_Laba2
             Buffer.BlockCopy(array, 0, buffer, offset, Convert.ToInt32(arrayBytes));
 
             filestream.Write(buffer);
+            filestream.Seek(0, SeekOrigin.Begin);
 
-            return new FileManager(filestream, new IntArrayHeader(arraySize));
+            return new FileManager(filestream, header);
         }
 
         public static FileManager CreateCharArrayFiles(string filename, long arraySize = 10000)
@@ -51,7 +54,7 @@ namespace TMP_Laba2
 
             var filestream = new FileStream(filename, FileMode.Create);
 
-            var header = new IntArrayHeader(arraySize);
+            var header = new CharArrayHeader(arraySize);
 
             Array.Copy(header.ToBytes(), buffer, header.AdditionalFieldsSize);
             offset += header.AdditionalFieldsSize;
@@ -60,7 +63,7 @@ namespace TMP_Laba2
 
             filestream.Write(buffer);
 
-            return new FileManager(filestream, new CharArrayHeader(arraySize));
+            return new FileManager(filestream, header);
         }
 
         public static FileManager CreateStringArrayFiles(string filename, int charCount, long arraySize = 10000)
@@ -80,7 +83,7 @@ namespace TMP_Laba2
 
             var filestream = new FileStream(filename, FileMode.Create);
 
-            var header = new IntArrayHeader(arraySize);
+            var header = new StringArrayHeader(arraySize, charCount);
 
             Array.Copy(header.ToBytes(), buffer, header.AdditionalFieldsSize);
             offset += header.AdditionalFieldsSize;
@@ -89,7 +92,7 @@ namespace TMP_Laba2
 
             filestream.Write(buffer);
 
-            return new FileManager(filestream, new StringArrayHeader(arraySize, charCount));
+            return new FileManager(filestream, header);
         }
 
         public static FileManager OpenFiles(string compFilename)
@@ -99,7 +102,7 @@ namespace TMP_Laba2
 
         private void UpdateFile(byte[] bytes, int offset, int length)
         {
-            _filestream.Seek(offset, SeekOrigin.Begin);
+            _filestream.Seek(0, SeekOrigin.Begin);
             _filestream.Write(bytes, offset, length);
         }
 
@@ -116,11 +119,13 @@ namespace TMP_Laba2
             int offset = GetPageIndex(index);
 
             byte[] buff = new byte[PageSize];
-            _filestream.Seek(0, SeekOrigin.Begin);
-            _filestream.Read(buff, offset, buff.Length);
-            
 
-            var page = new IntArrayPage(buff, ref offset);
+            _filestream.Seek(offset, SeekOrigin.Begin);
+            _filestream.Read(buff, 0, PageSize);
+
+            int pageOffset = 0;
+
+            var page = new IntArrayPage(buff, ref pageOffset);
 
             int localIndex = index % ElementsPerPage;
 

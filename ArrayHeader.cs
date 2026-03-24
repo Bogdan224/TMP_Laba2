@@ -24,7 +24,7 @@ namespace TMP_Laba2
         public ArrayType ArrayType { get; private set; }
 
         public int AdditionalFieldsSize => _elementSize
-           + _totalPageElementsSize + _arraySize + _arrayTypeSize;
+           + _totalPageElementsSize + _arraySize + _arrayTypeSize; // AdditionalFieldsSize = 19
 
         public long ArraySize { get; private set; }
         public long PageCount { get; private set; }

@@ -11,6 +11,8 @@ namespace TMP_Laba2
 
         private FileStream _filestream;
 
+        private byte[] _currentPageBuffer;
+
         private const int PageSize = 526;
         private const int ElementsPerPage = 128;
 
@@ -106,29 +108,53 @@ namespace TMP_Laba2
             _filestream?.Dispose();
         }
 
-
         public void AddValueToArray(int index, int value)
         {
-            if (_arrayHeader.ArrayType != ArrayType.Int) throw new NotImplementedException();
+            if (_arrayHeader.ArrayType != ArrayType.Int)
+                throw new Exception();
 
-            byte[] buffer = new byte[PageSize];
+            int offset = GetPageIndex(index);
 
+            byte[] buff = new byte[PageSize];
+            _filestream.Seek(0, SeekOrigin.Begin);
+            _filestream.Read(buff, offset, buff.Length);
+            
+
+            var page = new IntArrayPage(buff, ref offset);
+
+            int localIndex = index % ElementsPerPage;
+
+            page.Elements[localIndex] = value;
+            page.Bitmap.Set(localIndex, true);
+            page.ModificationFlag = true;
+
+            byte[] pageBytes = page.ToBytes();
+
+            _filestream.Seek(offset, SeekOrigin.Begin);
+            _filestream.Write(pageBytes, 0, pageBytes.Length);
+        }
+
+        public int GetPageIndex(int index)
+        {
             int pageIndex = index / ElementsPerPage;
+            // index = 20 ElementsPerPage = 128 // pageIndex = 0
+            // index = 128 ElementsPerPage = 128 // pageIndex = 1
 
-            _filestream.Read(buffer, (pageIndex - 1) * PageSize, PageSize);
+            int headerSize = _arrayHeader.AdditionalFieldsSize;
+            // headerSize = 17
 
-            var page = new IntArrayPage(buffer, ref pageIndex);
+            int offset = headerSize + pageIndex * PageSize;
+            // 17 + 0 * 526 = 17
 
-            var elements = page.Elements;
-
-            elements[index] = value;
+            return offset;
         }
 
         public void AddValueToArray(int index, string value)
         {
             if (_arrayHeader.ArrayType != ArrayType.String) throw new NotImplementedException();
 
-
+            GetPageIndex(index);
+            //var page = new StringArrayPage(_currentPageBuffer, ref index);
         }
 
         public void AddValueToArray(int index, char value)

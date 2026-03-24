@@ -42,17 +42,14 @@ namespace TMP_Laba2
                         //    commands.Open(commandText[1]);
                         //    break;
 
-                        //case "Input":
-                        //    if (commandText.Length == 2 && commandText[1].Contains('/'))
-                        //    {
-                        //        var tmp = commandText[1].Split('/');
-                        //        commands.Input(tmp[0], tmp[1]);
-                        //    }
-                        //    else if (commandText.Length == 3)
-                        //        commands.Input(commandText[1], commandText[2]);
-                        //    else
-                        //        throw new ArgumentException(paramNotFoundExceptionText);
-                        //    break;
+                        case "Input":
+                            if (commandText.Length < 3)
+                                throw new ArgumentException(paramNotFoundExceptionText);
+
+                            string value = string.Join(" ", commandText.Skip(2));
+
+                            commands.Input(commandText[1], value);
+                            break;
 
                         //case "Print":
                         //    if (commandText.Length != 2)
@@ -164,8 +161,8 @@ namespace TMP_Laba2
 
         public void Create(string filename, ArrayType arrayType, int charCount, int length)
         {
-            //if (!CheckFilename(filename))
-            //    throw new Exception("Нельзя создать файл с заданным расширением!");
+            if (!CheckFilename(filename))
+                throw new Exception("Нельзя создать файл с заданным расширением!");
 
             if (manager != null)
                 manager.Dispose();
@@ -211,34 +208,34 @@ namespace TMP_Laba2
         /// Команда выводит на экран или в указанный файл список команд.
         /// </summary>
         /// <param name="filename">Имя файла</param>
-        public void Help(string? filename = null)
-        {
-            StringBuilder help = new StringBuilder();
-            help.Append("Create (имя файла, [максимальная длина имени компонента], [имя файла спецификаций]) — если файл существует и сигнатура соответствует заданию, команда требует\n" +
-                "подтверждения на перезапись файла. При положительном ответе, файлы очищаются, после чего создаются все необходимые структуры в памяти и файлах на диске.\n" +
-                "После успешного выполнения команды файлы считаются открытыми для работы. Если сигнатура файла отсутствует или не соответствует заданию, команда вызывает ошибку.\n" +
-                "Расширение имени файла для списка компонентов — «.prd»., а для файла спецификаций — «.prs».\n\n");
-            help.Append("Open (имя файла) — открывает указанный файл и связанные с ним файлы в режиме rw, создает все необходимые структуры в памяти.\n" +
-                "Если сигнатура файла отсутствует или несоответствует заданию, команда вызывает ошибку.\n\n");
-            help.Append("Input (имя компонента, тип) — включает компонент в список. тип — одно из следующего: Изделие, Узел, Деталь.\n\n");
-            help.Append("Input (имя компонента/имя комплектующего) — включает комплектующее в спецификацию компонента. Имя комплектующего должно быть в списке,\n" +
-                "в противном случае и для детали эта команда вызывает ошибку.\n\n");
-            help.Append("Print (имя компонента) — выводит на экран состав компонента (спецификацию) в виде (для детали эта команда вызывает ошибку):" +
-                "\nКомпонент\n  |\n  Узел\n  | |\n  | Деталь\n  |\n  Деталь\n\n");
-            help.Append("Print (*) — выводит на экран построчно список компонентов в формате:\n" +
-                "Наименование\tТип\n\n");
-            help.Append("Help [имя файла] — выводит на экран или в указанный файл список команд.\n\n");
-            help.Append("Exit — закрывает все файлы и завершает программу. Файлы при завершении программы не уничтожаются.\n");
+        //public void Help(string? filename = null)
+        //{
+        //    StringBuilder help = new StringBuilder();
+        //    help.Append("Create (имя файла, [максимальная длина имени компонента], [имя файла спецификаций]) — если файл существует и сигнатура соответствует заданию, команда требует\n" +
+        //        "подтверждения на перезапись файла. При положительном ответе, файлы очищаются, после чего создаются все необходимые структуры в памяти и файлах на диске.\n" +
+        //        "После успешного выполнения команды файлы считаются открытыми для работы. Если сигнатура файла отсутствует или не соответствует заданию, команда вызывает ошибку.\n" +
+        //        "Расширение имени файла для списка компонентов — «.prd»., а для файла спецификаций — «.prs».\n\n");
+        //    help.Append("Open (имя файла) — открывает указанный файл и связанные с ним файлы в режиме rw, создает все необходимые структуры в памяти.\n" +
+        //        "Если сигнатура файла отсутствует или несоответствует заданию, команда вызывает ошибку.\n\n");
+        //    help.Append("Input (имя компонента, тип) — включает компонент в список. тип — одно из следующего: Изделие, Узел, Деталь.\n\n");
+        //    help.Append("Input (имя компонента/имя комплектующего) — включает комплектующее в спецификацию компонента. Имя комплектующего должно быть в списке,\n" +
+        //        "в противном случае и для детали эта команда вызывает ошибку.\n\n");
+        //    help.Append("Print (имя компонента) — выводит на экран состав компонента (спецификацию) в виде (для детали эта команда вызывает ошибку):" +
+        //        "\nКомпонент\n  |\n  Узел\n  | |\n  | Деталь\n  |\n  Деталь\n\n");
+        //    help.Append("Print (*) — выводит на экран построчно список компонентов в формате:\n" +
+        //        "Наименование\tТип\n\n");
+        //    help.Append("Help [имя файла] — выводит на экран или в указанный файл список команд.\n\n");
+        //    help.Append("Exit — закрывает все файлы и завершает программу. Файлы при завершении программы не уничтожаются.\n");
 
-            Console.Write(help.ToString());
-        }
+        //    Console.Write(help.ToString());
+        //}
 
         public void Input(string index, string value)
         {
             if (manager == null)
                 throw new FileNotFoundException(fileNotFoundExc);
 
-            if (index != null && value != null)
+            if (index == null && value == null)
                 throw new ArgumentNullException();
 
             int.TryParse(index, out int _index);
@@ -265,7 +262,10 @@ namespace TMP_Laba2
 
         public static bool CheckInt(string value)
         {
-            if (int.TryParse(value, out _)) return true;
+            if (int.TryParse(value, out _))
+            {
+                return true;
+            }
             return false;
         }
 
@@ -277,7 +277,7 @@ namespace TMP_Laba2
 
         public static bool CheckChar(string value)
         {
-            if (value.First() == '\'' && value.Last() == '\'' 
+            if (value.First() == '\'' && value.Last() == '\''
                 && value.Length == 1 && !int.TryParse(value, out _)) return true;
             return false;
         }

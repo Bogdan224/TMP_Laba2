@@ -72,16 +72,17 @@ namespace TMP_Laba2
         public static FileManager CreateStringArrayFiles(string filename, int charCount, long arraySize = 10000)
         {
             string[] array = new string[arraySize];
-            
+
             StringBuilder stringBuilder = new StringBuilder();
             for (int i = 0; i < charCount; i++)
             {
                 stringBuilder.Append('\0');
             }
-            var str = stringBuilder.ToString();
-            Array.Fill(array, str);
+            var str1 = stringBuilder.ToString();
+            Array.Fill(array, str1);
 
-            byte[] buffer = new byte[arraySize * charCount];
+            long arrayBytes = arraySize * charCount * 2;
+            byte[] buffer = new byte[arrayBytes];
             int offset = 0;
 
             var filestream = new FileStream(filename, FileMode.Create);
@@ -91,7 +92,12 @@ namespace TMP_Laba2
             buffer = header.ToBytes().Concat(buffer).ToArray();
             offset += header.AdditionalFieldsSize;
 
-            Buffer.BlockCopy(array, 0, buffer, offset, buffer.Length);
+            for (int i = 0; i < array.Length; i++)
+            {
+                string str = array[i] ?? string.Empty;
+                char[] chars = str.PadRight(charCount).ToCharArray();
+                Buffer.BlockCopy(chars, 0, buffer, offset + (i * charCount * 2), charCount * 2);
+            }
 
             filestream.Seek(0, SeekOrigin.Begin);
             filestream.Write(buffer);

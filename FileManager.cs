@@ -13,13 +13,16 @@ namespace TMP_Laba2
 
         private FileStream _filestream;
 
-        private const int PageSize = 542;
-        private const int ElementsPerPage = 128;
+        private int _pageSize;
+        private const int _pageAdditionalFieldsSize = 30;
+        private const int _elementsPerPage = 128;
 
         private FileManager(FileStream fileHeader, ArrayHeader arrayHeader)
         {
             _filestream = fileHeader;
             _arrayHeader = arrayHeader;
+
+            _pageSize = _arrayHeader.TotalPageElementsSize + _pageAdditionalFieldsSize;
         }
 
         public static FileManager CreateIntArrayFiles(string filename, long arraySize = 10000)
@@ -119,16 +122,16 @@ namespace TMP_Laba2
 
             int offset = GetPageIndex(index);
 
-            byte[] buff = new byte[PageSize];
+            byte[] buff = new byte[_pageSize];
 
             _filestream.Seek(offset, SeekOrigin.Begin);
-            _filestream.Read(buff, 0, PageSize);
+            _filestream.Read(buff, 0, _pageSize);
 
             int pageOffset = 0;
 
             var page = new IntArrayPage(buff, ref pageOffset);
 
-            int localIndex = index % ElementsPerPage;
+            int localIndex = index % _elementsPerPage;
 
             page.SetElementByIndex(localIndex, value); 
 
@@ -140,9 +143,9 @@ namespace TMP_Laba2
 
         private int GetPageIndex(int index)
         {
-            int pageIndex = index / ElementsPerPage;
+            int pageIndex = index / _elementsPerPage;
             int headerSize = _arrayHeader.AdditionalFieldsSize;
-            int offset = headerSize + pageIndex * PageSize;
+            int offset = headerSize + pageIndex * _pageSize;
 
             return offset;
         }
@@ -162,16 +165,16 @@ namespace TMP_Laba2
 
             int offset = GetPageIndex(index);
 
-            byte[] buff = new byte[PageSize];
+            byte[] buff = new byte[_pageSize];
 
             _filestream.Seek(offset, SeekOrigin.Begin);
-            _filestream.Read(buff, 0, PageSize);
+            _filestream.Read(buff, 0, _pageSize);
 
             int pageOffset = 0;
 
             var page = new CharArrayPage(buff, ref pageOffset);
 
-            int localIndex = index % ElementsPerPage;
+            int localIndex = index % _elementsPerPage;
 
             page.SetElementByIndex(localIndex, value);
 
@@ -185,10 +188,10 @@ namespace TMP_Laba2
         {
             int offset = GetPageIndex(index);
 
-            byte[] buff = new byte[PageSize];
+            byte[] buff = new byte[_pageSize];
 
             _filestream.Seek(offset, SeekOrigin.Begin);
-            _filestream.Read(buff, 0, PageSize);
+            _filestream.Read(buff, 0, _pageSize);
 
             int pageOffset = 0;
 
@@ -214,7 +217,7 @@ namespace TMP_Laba2
         {
            var page = GetPage(index);
 
-            int localIndex = index % ElementsPerPage;
+            int localIndex = index % _elementsPerPage;
 
             Console.WriteLine(page.Elements.GetValue(localIndex));
         }

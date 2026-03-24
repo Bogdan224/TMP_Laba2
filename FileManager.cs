@@ -40,8 +40,8 @@ namespace TMP_Laba2
 
             Buffer.BlockCopy(array, 0, buffer, offset, Convert.ToInt32(arrayBytes));
 
-            filestream.Write(buffer);
             filestream.Seek(0, SeekOrigin.Begin);
+            filestream.Write(buffer);
 
             return new FileManager(filestream, header);
         }
@@ -49,18 +49,20 @@ namespace TMP_Laba2
         public static FileManager CreateCharArrayFiles(string filename, long arraySize = 10000)
         {
             char[] array = new char[arraySize];
-            byte[] buffer = new byte[arraySize * 2];
+            long arrayBytes = arraySize * 2;
+            byte[] buffer = new byte[arrayBytes];
             int offset = 0;
 
             var filestream = new FileStream(filename, FileMode.Create);
 
             var header = new CharArrayHeader(arraySize);
 
-            Array.Copy(header.ToBytes(), buffer, header.AdditionalFieldsSize);
+            buffer = header.ToBytes().Concat(buffer).ToArray();
             offset += header.AdditionalFieldsSize;
 
-            Buffer.BlockCopy(array, 0, buffer, offset, buffer.Length);
+            Buffer.BlockCopy(array, 0, buffer, offset, Convert.ToInt32(arrayBytes));
 
+            filestream.Seek(0, SeekOrigin.Begin);
             filestream.Write(buffer);
 
             return new FileManager(filestream, header);
@@ -85,11 +87,12 @@ namespace TMP_Laba2
 
             var header = new StringArrayHeader(arraySize, charCount);
 
-            Array.Copy(header.ToBytes(), buffer, header.AdditionalFieldsSize);
+            buffer = header.ToBytes().Concat(buffer).ToArray();
             offset += header.AdditionalFieldsSize;
 
             Buffer.BlockCopy(array, 0, buffer, offset, buffer.Length);
 
+            filestream.Seek(0, SeekOrigin.Begin);
             filestream.Write(buffer);
 
             return new FileManager(filestream, header);

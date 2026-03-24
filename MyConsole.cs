@@ -244,17 +244,20 @@ namespace TMP_Laba2
                 manager.AddValueToArray(_index, _value);
             }
 
-            if (CheckString(value))
+            else if (CheckString(value))
             {
                 manager.AddValueToArray(_index, value);
             }
 
-            if (CheckChar(value))
+            else if (CheckChar(value))
             {
-                char _value = value[0];
+                char _value = value[1];
 
                 manager.AddValueToArray(_index, _value);
             }
+
+            else
+                throw new Exception("Не прошёл проверку!");
         }
 
         private static bool CheckInt(string value)
@@ -275,7 +278,7 @@ namespace TMP_Laba2
         private static bool CheckChar(string value)
         {
             if (value.First() == '\'' && value.Last() == '\''
-                && value.Length == 1 && !int.TryParse(value, out _)) return true;
+                && value.Length == 3 && !int.TryParse(value, out _)) return true;
             return false;
         }
 

@@ -93,9 +93,6 @@ namespace TMP_Laba2
 
         public void SetElementByIndex(int index, object value)
         {
-            if (!OpenToWriteFlag)
-                throw new Exception("Страница закрыта для записи!");
-
             Elements.SetValue(value, index);
             Bitmap.Set(index, true);
             ModificationFlag = true;

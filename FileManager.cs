@@ -128,11 +128,9 @@ namespace TMP_Laba2
 
             var page = new IntArrayPage(buff, ref pageOffset);
 
-            int localIndex = index % ElementsPerPage; 
+            int localIndex = index % ElementsPerPage;
 
-            page.Elements[localIndex] = value; // SetElementByIndex
-            page.Bitmap.Set(localIndex, true);
-            page.ModificationFlag = true;
+            page.SetElementByIndex(localIndex, value); 
 
             byte[] pageBytes = page.ToBytes();
 
@@ -159,7 +157,28 @@ namespace TMP_Laba2
 
         public void AddValueToArray(int index, char value)
         {
+            if (_arrayHeader.ArrayType != ArrayType.Char)
+                throw new Exception();
 
+            int offset = GetPageIndex(index);
+
+            byte[] buff = new byte[PageSize];
+
+            _filestream.Seek(offset, SeekOrigin.Begin);
+            _filestream.Read(buff, 0, PageSize);
+
+            int pageOffset = 0;
+
+            var page = new CharArrayPage(buff, ref pageOffset);
+
+            int localIndex = index % ElementsPerPage;
+
+            page.SetElementByIndex(localIndex, value);
+
+            byte[] pageBytes = page.ToBytes();
+
+            _filestream.Seek(offset, SeekOrigin.Begin);
+            _filestream.Write(pageBytes, 0, pageBytes.Length);
         }
 
         private ArrayPage GetPage(int index)
@@ -185,7 +204,7 @@ namespace TMP_Laba2
             //}
             else
             {
-                page = new IntArrayPage(buff, ref pageOffset);
+                page = new CharArrayPage(buff, ref pageOffset);
             }
 
             return page;

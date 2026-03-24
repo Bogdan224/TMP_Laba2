@@ -13,9 +13,7 @@ namespace TMP_Laba2
 
         private FileStream _filestream;
 
-        private byte[] _currentPageBuffer;
-
-        private const int PageSize = 526 + 16;
+        private const int PageSize = 542;
         private const int ElementsPerPage = 128;
 
         private FileManager(FileStream fileHeader, ArrayHeader arrayHeader)
@@ -130,9 +128,9 @@ namespace TMP_Laba2
 
             var page = new IntArrayPage(buff, ref pageOffset);
 
-            int localIndex = index % ElementsPerPage;
+            int localIndex = index % ElementsPerPage; 
 
-            page.Elements[localIndex] = value;
+            page.Elements[localIndex] = value; // SetElementByIndex
             page.Bitmap.Set(localIndex, true);
             page.ModificationFlag = true;
 
@@ -142,17 +140,11 @@ namespace TMP_Laba2
             _filestream.Write(pageBytes, 0, pageBytes.Length);
         }
 
-        public int GetPageIndex(int index)
+        private int GetPageIndex(int index)
         {
             int pageIndex = index / ElementsPerPage;
-            // index = 20 ElementsPerPage = 128 // pageIndex = 0
-            // index = 128 ElementsPerPage = 128 // pageIndex = 1
-
             int headerSize = _arrayHeader.AdditionalFieldsSize;
-            // headerSize = 17
-
             int offset = headerSize + pageIndex * PageSize;
-            // 17 + 0 * 526 = 17
 
             return offset;
         }
@@ -168,6 +160,44 @@ namespace TMP_Laba2
         public void AddValueToArray(int index, char value)
         {
 
+        }
+
+        private ArrayPage GetPage(int index)
+        {
+            int offset = GetPageIndex(index);
+
+            byte[] buff = new byte[PageSize];
+
+            _filestream.Seek(offset, SeekOrigin.Begin);
+            _filestream.Read(buff, 0, PageSize);
+
+            int pageOffset = 0;
+
+            ArrayPage page;
+
+            if (_arrayHeader.ArrayType == ArrayType.Int)
+            {
+                page = new IntArrayPage(buff, ref pageOffset);
+            }
+            //if (_arrayHeader.ArrayType == ArrayType.String)
+            //{
+            //     page = new StringArrayPage(buff, ref pageOffset);
+            //}
+            else
+            {
+                page = new IntArrayPage(buff, ref pageOffset);
+            }
+
+            return page;
+        }
+
+        public void Print(int index)
+        {
+           var page = GetPage(index);
+
+            int localIndex = index % ElementsPerPage;
+
+            Console.WriteLine(page.Elements.GetValue(localIndex));
         }
 
 

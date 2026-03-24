@@ -17,7 +17,7 @@ namespace TMP_Laba2
 
         protected const int AdditionalFieldsSize = _modificationFlagSize + _openToWriteFlagSize
            + _pageUsingCountSize + _pageInMemoryTimeSize + _pageIndexSize + _bitmapSize;
-        // AdditionalFieldsSize = 1 + 1 + 4 + 4 + 4 = 30
+        // AdditionalFieldsSize = 1 + 1 + 4 + 4 + 4 + 16 = 30
 
         public const int TotalElementsCount = 128;
 

@@ -51,15 +51,12 @@ namespace TMP_Laba2
                             commands.Input(commandText[1], value);
                             break;
 
-                        //case "Print":
-                        //    if (commandText.Length != 2)
-                        //        throw new ArgumentException(paramNotFoundExceptionText);
-
-                        //    if (commandText[1] == "*")
-                        //        commands.Print();
-                        //    else
-                        //        commands.Print(commandText[1]);
-                        //    break;
+                        case "Print":
+                            if (commandText.Length != 2)
+                                throw new ArgumentException(paramNotFoundExceptionText);
+                            else
+                                commands.Print(Convert.ToInt32(commandText[1]));
+                            break;
 
                         //case "Help":
                         //    if (commandText.Length > 2)
@@ -260,7 +257,7 @@ namespace TMP_Laba2
             }
         }
 
-        public static bool CheckInt(string value)
+        private static bool CheckInt(string value)
         {
             if (int.TryParse(value, out _))
             {
@@ -269,18 +266,25 @@ namespace TMP_Laba2
             return false;
         }
 
-        public static bool CheckString(string value)
+        private static bool CheckString(string value)
         {
             if (value.First() == '\"' && value.Last() == '\"') return true;
             return false;
         }
 
-        public static bool CheckChar(string value)
+        private static bool CheckChar(string value)
         {
             if (value.First() == '\'' && value.Last() == '\''
                 && value.Length == 1 && !int.TryParse(value, out _)) return true;
             return false;
         }
 
+        public void Print(int index)
+        {
+            if (index == null)
+                throw new ArgumentNullException();
+
+            manager.Print(index);
+        }
     }
 }

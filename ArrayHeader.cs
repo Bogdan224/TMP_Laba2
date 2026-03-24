@@ -189,14 +189,14 @@ namespace TMP_Laba2
         {
             TotalPageElementsSize = (int)Math.Ceiling((double)(ArrayPage.TotalElementsCount * ElementSize) / 512) * 512;
 
-            pages = new List<IntArrayPage>();
+            pages = new List<StringArrayPage>();
         }
 
         public StringArrayHeader(long arraySize, byte[] bytes, ref int offset, int pageCount = 3) : base(bytes, arraySize, ref offset)
         {
             TotalPageElementsSize = (int)Math.Ceiling((double)(ArrayPage.TotalElementsCount * ElementSize) / 512) * 512;
 
-            pages = new List<CharArrayPage>();
+            pages = new List<StringArrayPage>();
 
             FromBytes(bytes, ref offset, pageCount);
         }

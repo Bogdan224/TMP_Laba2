@@ -185,7 +185,7 @@ namespace TMP_Laba2
     {
         public new List<StringArrayPage> Pages => (List<StringArrayPage>)pages;
 
-        public StringArrayHeader(long arraySize, int charCount) : base(ArrayType.String, arraySize, charCount * 2)
+        public StringArrayHeader(long arraySize, int charCount) : base(ArrayType.String, arraySize, charCount)
         {
             TotalPageElementsSize = (int)Math.Ceiling((double)(ArrayPage.TotalElementsCount * ElementSize) / 512) * 512;
 

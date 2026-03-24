@@ -33,7 +33,7 @@ namespace TMP_Laba2
             int offset = 0;
 
             var filestream = new FileStream(_path + filename, FileMode.Create);
-            
+
             var header = new IntArrayHeader(arraySize);
 
             buffer = header.ToBytes().Concat(buffer).ToArray();
@@ -54,7 +54,7 @@ namespace TMP_Laba2
             byte[] buffer = new byte[arrayBytes];
             int offset = 0;
 
-            var filestream = new FileStream(filename, FileMode.Create);
+            var filestream = new FileStream(_path + filename, FileMode.Create);
 
             var header = new CharArrayHeader(arraySize);
 
@@ -81,11 +81,11 @@ namespace TMP_Laba2
             var str1 = stringBuilder.ToString();
             Array.Fill(array, str1);
 
-            long arrayBytes = arraySize * charCount * 2;
+            long arrayBytes = arraySize * charCount;
             byte[] buffer = new byte[arrayBytes];
             int offset = 0;
 
-            var filestream = new FileStream(filename, FileMode.Create);
+            var filestream = new FileStream(_path + filename, FileMode.Create);
 
             var header = new StringArrayHeader(arraySize, charCount);
 
@@ -96,7 +96,7 @@ namespace TMP_Laba2
             {
                 string str = array[i] ?? string.Empty;
                 char[] chars = str.PadRight(charCount).ToCharArray();
-                Buffer.BlockCopy(chars, 0, buffer, offset + (i * charCount * 2), charCount * 2);
+                Buffer.BlockCopy(chars, 0, buffer, offset + (i * charCount), charCount);
             }
 
             filestream.Seek(0, SeekOrigin.Begin);
@@ -139,7 +139,7 @@ namespace TMP_Laba2
 
             int localIndex = index % _elementsPerPage;
 
-            page.SetElementByIndex(localIndex, value); 
+            page.SetElementByIndex(localIndex, value);
 
             byte[] pageBytes = page.ToBytes();
 
@@ -158,7 +158,7 @@ namespace TMP_Laba2
 
         public void AddValueToArray(int index, string value)
         {
-            if (_arrayHeader.ArrayType != ArrayType.String) 
+            if (_arrayHeader.ArrayType != ArrayType.String)
                 throw new NotImplementedException();
 
             int offset = GetPageIndex(index);
@@ -225,10 +225,10 @@ namespace TMP_Laba2
             {
                 page = new IntArrayPage(buff, ref pageOffset);
             }
-            //if (_arrayHeader.ArrayType == ArrayType.String)
-            //{
-            //     page = new StringArrayPage(buff, ref pageOffset);
-            //}
+            if (_arrayHeader.ArrayType == ArrayType.String)
+            {
+                page = new StringArrayPage(buff, ref pageOffset, _arrayHeader.ElementSize);
+            }
             else
             {
                 page = new CharArrayPage(buff, ref pageOffset);
@@ -239,7 +239,7 @@ namespace TMP_Laba2
 
         public void Print(int index)
         {
-           var page = GetPage(index);
+            var page = GetPage(index);
 
             int localIndex = index % _elementsPerPage;
 

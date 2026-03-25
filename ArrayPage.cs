@@ -30,12 +30,14 @@ namespace TMP_Laba2
         public Array Elements => elements;
         public BitArray Bitmap { get; private set; }
 
-        public ArrayPage()
+        public ArrayPage(int pageIndex)
         {
+            PageIndex = pageIndex;
+
             Bitmap = new BitArray(TotalElementsCount);
         }
 
-        public ArrayPage(byte[] bytes, ref int offset) : this()
+        public ArrayPage(byte[] bytes, ref int offset) : this(0)
         {
             FromBytes(bytes, ref offset);
         }
@@ -106,7 +108,7 @@ namespace TMP_Laba2
 
         public new int[] Elements => (int[])elements;
 
-        public IntArrayPage()
+        public IntArrayPage(int pageIndex) : base(pageIndex)
         {
             elements = new int[TotalElementsCount];
         }
@@ -150,7 +152,7 @@ namespace TMP_Laba2
 
         public new char[] Elements => (char[])elements;
 
-        public CharArrayPage()
+        public CharArrayPage(int pageIndex) : base(pageIndex)
         {
             elements = new char[TotalElementsCount];
         }
@@ -192,9 +194,17 @@ namespace TMP_Laba2
     {
         public new string[] Elements => (string[])elements;
 
-        public StringArrayPage()
+        public StringArrayPage(int pageIndex, int elementSize) : base(pageIndex)
         {
             elements = new string[TotalElementsCount];
+
+            var str = new StringBuilder();
+            for (int i = 0; i < elementSize; i++)
+            {
+                str.Append('\0');
+            }
+
+            Array.Fill(Elements, str.ToString());
         }
 
         public StringArrayPage(byte[] bytes, ref int offset, int elementSize) : base(bytes, ref offset)

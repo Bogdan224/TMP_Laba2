@@ -7,6 +7,9 @@ namespace TMP_Laba2
 {
     public class FileManager : IDisposable
     {
+        private const int _pageAdditionalFieldsSize = 30;
+        private const int _elementsPerPage = 128;
+
         private static string _path = @$"C:\Users\{Environment.UserName}\Downloads\";
 
         private ArrayHeader _arrayHeader;
@@ -14,8 +17,6 @@ namespace TMP_Laba2
         private FileStream _filestream;
 
         private int _pageSize;
-        private const int _pageAdditionalFieldsSize = 30;
-        private const int _elementsPerPage = 128;
 
         private FileManager(FileStream fileHeader, ArrayHeader arrayHeader)
         {
@@ -27,21 +28,21 @@ namespace TMP_Laba2
 
         public static FileManager CreateIntArrayFiles(string filename, long arraySize = 10000)
         {
-            int[] array = new int[arraySize];
-            long arrayBytes = arraySize * 4;
-            byte[] buffer = new byte[arrayBytes];
-            int offset = 0;
+            var header = new IntArrayHeader(arraySize);
+
+            byte[] buffer = new byte[_pageAdditionalFieldsSize];
 
             var filestream = new FileStream(_path + filename, FileMode.Create);
 
-            var header = new IntArrayHeader(arraySize);
-
             buffer = header.ToBytes().Concat(buffer).ToArray();
-            offset += header.AdditionalFieldsSize;
 
-            Buffer.BlockCopy(array, 0, buffer, offset, Convert.ToInt32(arrayBytes));
+            for (int i = 0; i < header.PageCount; i++)
+            {
+                var charArrayPage = new IntArrayPage(i + 1);
 
-            filestream.Seek(0, SeekOrigin.Begin);
+                buffer = buffer.Concat(charArrayPage.ToBytes(header.ElementSize)).ToArray();
+            }
+
             filestream.Write(buffer);
 
             return new FileManager(filestream, header);
@@ -49,21 +50,21 @@ namespace TMP_Laba2
 
         public static FileManager CreateCharArrayFiles(string filename, long arraySize = 10000)
         {
-            char[] array = new char[arraySize];
-            long arrayBytes = arraySize * 2;
-            byte[] buffer = new byte[arrayBytes];
-            int offset = 0;
+            var header = new CharArrayHeader(arraySize);
+
+            byte[] buffer = new byte[_pageAdditionalFieldsSize];
 
             var filestream = new FileStream(_path + filename, FileMode.Create);
 
-            var header = new CharArrayHeader(arraySize);
-
             buffer = header.ToBytes().Concat(buffer).ToArray();
-            offset += header.AdditionalFieldsSize;
 
-            Buffer.BlockCopy(array, 0, buffer, offset, Convert.ToInt32(arrayBytes));
+            for (int i = 0; i < header.PageCount; i++)
+            {
+                var charArrayPage = new CharArrayPage(i + 1);
 
-            filestream.Seek(0, SeekOrigin.Begin);
+                buffer = buffer.Concat(charArrayPage.ToBytes()).ToArray();   
+            }
+
             filestream.Write(buffer);
 
             return new FileManager(filestream, header);
@@ -71,43 +72,65 @@ namespace TMP_Laba2
 
         public static FileManager CreateStringArrayFiles(string filename, int charCount, long arraySize = 10000)
         {
-            string[] array = new string[arraySize];
+            var header = new StringArrayHeader(arraySize, charCount);
 
-            StringBuilder stringBuilder = new StringBuilder();
-            for (int i = 0; i < charCount; i++)
-            {
-                stringBuilder.Append('\0');
-            }
-            var str1 = stringBuilder.ToString();
-            Array.Fill(array, str1);
-
-            long arrayBytes = arraySize * charCount;
-            byte[] buffer = new byte[arrayBytes];
-            int offset = 0;
+            byte[] buffer = new byte[_pageAdditionalFieldsSize];
 
             var filestream = new FileStream(_path + filename, FileMode.Create);
 
-            var header = new StringArrayHeader(arraySize, charCount);
-
             buffer = header.ToBytes().Concat(buffer).ToArray();
-            offset += header.AdditionalFieldsSize;
 
-            for (int i = 0; i < array.Length; i++)
+            for (int i = 0; i < header.PageCount; i++)
             {
-                string str = array[i] ?? string.Empty;
-                char[] chars = str.PadRight(charCount).ToCharArray();
-                Buffer.BlockCopy(chars, 0, buffer, offset + (i * charCount), charCount);
+                var charArrayPage = new StringArrayPage(i + 1, header.ElementSize);
+
+                buffer = buffer.Concat(charArrayPage.ToBytes(header.ElementSize)).ToArray();
             }
 
-            filestream.Seek(0, SeekOrigin.Begin);
             filestream.Write(buffer);
 
             return new FileManager(filestream, header);
         }
 
-        public static FileManager OpenFiles(string compFilename)
+        public static FileManager OpenFiles(string filename)
         {
-            throw new NotImplementedException();
+            var filestream = new FileStream(_path + filename, FileMode.Open);
+
+            var buffer = new byte[ArrayHeader.AdditionalFieldsSize];
+            int offset = 0;
+
+            filestream.Read(buffer, 0, buffer.Length);
+
+            byte[] tmpBuffer;
+
+            ArrayHeader header;
+            if ((ArrayType)buffer.Last() == ArrayType.Int)
+            {
+                header = new IntArrayHeader(buffer, ref offset);
+
+                tmpBuffer = new byte[(header.TotalPageElementsSize + _pageAdditionalFieldsSize) * 3];
+            }
+            else if ((ArrayType)buffer.Last() == ArrayType.Char)
+            {
+                header = new CharArrayHeader(buffer, ref offset);
+
+                tmpBuffer = new byte[(header.TotalPageElementsSize + _pageAdditionalFieldsSize) * 3];   
+            }
+            else if ((ArrayType)buffer.Last() == ArrayType.String) 
+            {
+                header = new StringArrayHeader(buffer, ref offset);
+
+                tmpBuffer = new byte[(header.TotalPageElementsSize + _pageAdditionalFieldsSize) * 3];
+            }
+            else
+                throw new Exception("Запись типа массива была совершена неверно!");
+
+            filestream.Read(tmpBuffer, 0, tmpBuffer.Length);
+
+            offset = 0;
+            header.RestorePagesFromBytes(tmpBuffer, ref offset);
+
+            return new FileManager(filestream, header);
         }
 
         private void UpdateFile(byte[] bytes, int offset, int length)
@@ -150,7 +173,7 @@ namespace TMP_Laba2
         private int GetPageIndex(int index)
         {
             int pageIndex = index / _elementsPerPage;
-            int headerSize = _arrayHeader.AdditionalFieldsSize;
+            int headerSize = ArrayHeader.AdditionalFieldsSize;
             int offset = headerSize + pageIndex * _pageSize;
 
             return offset;
@@ -222,17 +245,11 @@ namespace TMP_Laba2
             ArrayPage page;
 
             if (_arrayHeader.ArrayType == ArrayType.Int)
-            {
                 page = new IntArrayPage(buff, ref pageOffset);
-            }
-            if (_arrayHeader.ArrayType == ArrayType.String)
-            {
+            else if (_arrayHeader.ArrayType == ArrayType.String)
                 page = new StringArrayPage(buff, ref pageOffset, _arrayHeader.ElementSize);
-            }
             else
-            {
                 page = new CharArrayPage(buff, ref pageOffset);
-            }
 
             return page;
         }

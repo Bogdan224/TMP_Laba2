@@ -21,10 +21,9 @@ namespace TMP_Laba2
 
         protected IList pages = null!;
 
-        public ArrayType ArrayType { get; private set; }
+        public const int AdditionalFieldsSize = _totalPageElementsSize + _elementSize + _arraySize + _arrayTypeSize; //17
 
-        public int AdditionalFieldsSize => _elementSize
-           + _totalPageElementsSize + _arraySize + _arrayTypeSize; // AdditionalFieldsSize = 19
+        public ArrayType ArrayType { get; private set; }
 
         public long ArraySize { get; private set; }
         public long PageCount { get; private set; }
@@ -42,12 +41,10 @@ namespace TMP_Laba2
             PageCount = ArraySize / ArrayPage.TotalElementsCount;
         }
 
-        public ArrayHeader(byte[] bytes, long arraySize, ref int offset)
+        public ArrayHeader(byte[] bytes, ref int offset)
         {
-            ArraySize = arraySize;
-            PageCount = ArraySize / ArrayPage.TotalElementsCount;
-
             FromBytes(bytes, ref offset);
+            PageCount = ArraySize / ArrayPage.TotalElementsCount;
         }
 
         public virtual byte[] ToBytes()
@@ -84,6 +81,8 @@ namespace TMP_Laba2
             ArrayType = (ArrayType)bytes[offset];
             offset += _arrayTypeSize;
         }
+
+        public abstract void RestorePagesFromBytes(byte[] bytes, ref int offset, int pageCount = 3);
     }
 
     public enum ArrayType : byte
@@ -103,13 +102,11 @@ namespace TMP_Laba2
             pages = new List<IntArrayPage>();
         }
 
-        public IntArrayHeader(long arraySize, byte[] bytes, ref int offset, int pageCount = 3) : base(bytes, arraySize, ref offset)
+        public IntArrayHeader(byte[] bytes, ref int offset) : base(bytes, ref offset)
         {
             TotalPageElementsSize = 512;
 
             pages = new List<IntArrayPage>();
-
-            FromBytes(bytes, ref offset, pageCount);
         }
 
         public override byte[] ToBytes()
@@ -126,7 +123,7 @@ namespace TMP_Laba2
             return [.. base.ToBytes(), .. bytes];
         }
 
-        private void FromBytes(byte[] bytes, ref int offset, int pageCount = 3)
+        public override void RestorePagesFromBytes(byte[] bytes, ref int offset, int pageCount = 3)
         {
             for(int i = 0; i < pageCount; i++)
             {
@@ -148,13 +145,11 @@ namespace TMP_Laba2
             pages = new List<CharArrayPage>();
         }
 
-        public CharArrayHeader(long arraySize, byte[] bytes, ref int offset, int pageCount = 3) : base(bytes, arraySize, ref offset)
+        public CharArrayHeader(byte[] bytes, ref int offset) : base(bytes, ref offset)
         {
             TotalPageElementsSize = 512;
 
             pages = new List<CharArrayPage>();
-
-            FromBytes(bytes, ref offset, pageCount);
         }
 
         public override byte[] ToBytes()
@@ -171,7 +166,7 @@ namespace TMP_Laba2
             return [.. base.ToBytes(), .. bytes];
         }
 
-        private void FromBytes(byte[] bytes, ref int offset, int pageCount = 3)
+        public override void RestorePagesFromBytes(byte[] bytes, ref int offset, int pageCount = 3)
         {
             for (int i = 0; i < pageCount; i++)
             {
@@ -192,13 +187,11 @@ namespace TMP_Laba2
             pages = new List<StringArrayPage>();
         }
 
-        public StringArrayHeader(long arraySize, byte[] bytes, ref int offset, int pageCount = 3) : base(bytes, arraySize, ref offset)
+        public StringArrayHeader(byte[] bytes, ref int offset) : base(bytes, ref offset)
         {
             TotalPageElementsSize = (int)Math.Ceiling((double)(ArrayPage.TotalElementsCount * ElementSize) / 512) * 512;
 
             pages = new List<StringArrayPage>();
-
-            FromBytes(bytes, ref offset, pageCount);
         }
 
         public override byte[] ToBytes()
@@ -215,7 +208,7 @@ namespace TMP_Laba2
             return [.. base.ToBytes(), .. bytes];
         }
 
-        private void FromBytes(byte[] bytes, ref int offset, int pageCount = 3)
+        public override void RestorePagesFromBytes(byte[] bytes, ref int offset, int pageCount = 3)
         {
             for (int i = 0; i < pageCount; i++)
             {

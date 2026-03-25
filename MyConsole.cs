@@ -36,11 +36,11 @@ namespace TMP_Laba2
                                 throw new ArgumentException(paramNotFoundExceptionText);
                             break;
 
-                        //case "Open":
-                        //    if (commandText.Length != 2)
-                        //        throw new ArgumentException(paramNotFoundExceptionText);
-                        //    commands.Open(commandText[1]);
-                        //    break;
+                        case "Open":
+                            if (commandText.Length != 2)
+                                throw new ArgumentException(paramNotFoundExceptionText);
+                            commands.Open(commandText[1]);
+                            break;
 
                         case "Input":
                             if (commandText.Length < 3)
@@ -118,8 +118,8 @@ namespace TMP_Laba2
 
         public void Create(string filename, ArrayType arrayType, int length = 10000)
         {
-            if (!CheckFilename(filename))
-                throw new Exception("Нельзя создать файл с заданным расширением!");
+            //if (!CheckFilename(filename))
+            //    throw new Exception("Нельзя создать файл с заданным расширением!");
 
             if (manager != null)
                 manager.Dispose();
@@ -149,17 +149,19 @@ namespace TMP_Laba2
 
             if (arrayType == ArrayType.String)
                 throw new Exception("Для создания массива с заданным типом введите дополнительные параметры!");
-            if (arrayType == ArrayType.Int)
+            else if (arrayType == ArrayType.Int)
                 manager = FileManager.CreateIntArrayFiles(filename, length);
-            if (arrayType == ArrayType.Char)
+            else if (arrayType == ArrayType.Char)
                 manager = FileManager.CreateCharArrayFiles(filename, length);
+            else
+                throw new Exception("Тип массива задан неверно!");
 
         }
 
         public void Create(string filename, ArrayType arrayType, int charCount, int length)
         {
-            if (!CheckFilename(filename))
-                throw new Exception("Нельзя создать файл с заданным расширением!");
+            //if (!CheckFilename(filename))
+            //    throw new Exception("Нельзя создать файл с заданным расширением!");
 
             if (manager != null)
                 manager.Dispose();
@@ -187,10 +189,22 @@ namespace TMP_Laba2
                 return;
             }
 
+
             if (arrayType == ArrayType.String)
                 manager = FileManager.CreateStringArrayFiles(filename, charCount, length);
             else
                 throw new Exception("Неверное количество параметров для заданного типа!");
+        }
+
+        public void Open(string filename) 
+        {
+            if (manager != null)
+                manager.Dispose();
+
+            if (!File.Exists(path + filename))
+                throw new Exception("Файл не найден!");
+
+            manager = FileManager.OpenFiles(filename);
         }
 
         /// <summary>
